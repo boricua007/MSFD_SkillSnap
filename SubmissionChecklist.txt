@@ -1,0 +1,24 @@
+Submission Checklist (Part 1)
+    Solution with API and Client projects added ✔️
+        MSFD_SkillSnap.Api and MSFD_SkillSnap.Client projects created and
+        added to MSFD_SkillSnap.slnx.
+
+    Models for PortfolioUser, Project, and Skill created ✔️
+        PortfolioUser, Project, and Skill classes defined in
+        MSFD_SkillSnap.Api/Models with a one-to-many relationship
+        (PortfolioUser -> Projects, PortfolioUser -> Skills).
+
+    Database successfully created with EF Core ✔️
+        SkillSnapContext registered with SQLite, InitialCreate migration
+        generated and applied.
+
+    Static layout components scaffolded in Blazor ✔️
+        ProfileCard, ProjectList, and SkillTags components created under
+        MSFD_SkillSnap.Client/Components and rendered on the Home page.
+
+    Copilot used to support and improve implementation ✔️
+        Copilot used to refine ProfileCard into a parameterized component,
+        configure EF Core relationships via Fluent API, and clean up
+        Program.cs service registrations.
+
+    Project saved for continuation in Part 2

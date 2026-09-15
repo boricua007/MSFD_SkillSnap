@@ -1,0 +1,18 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+
+## Database
+*.db
+*.db-shm
+*.db-wal
+
+## VS Code
+.vs/
+.vscode/
+
+## OS
+.DS_Store
+Thumbs.db

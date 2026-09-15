@@ -1,0 +1,16 @@
+<div class="card" style="width:250px; text-align:center; padding:1rem; border:1px solid #ccc; border-radius:8px;">
+    <img src="@ImageUrl" alt="Profile Image" style="border-radius:50%; margin-bottom:1rem;" />
+    <h3>@Name</h3>
+    <p>@Bio</p>
+</div>
+
+@code {
+    [Parameter]
+    public string Name { get; set; } = "Daisy Allen";
+
+    [Parameter]
+    public string Bio { get; set; } = "Full-Stack Developer in training";
+
+    [Parameter]
+    public string ImageUrl { get; set; } = "https://placehold.co/200x200";
+}
