@@ -8,13 +8,13 @@ The application demonstrates the foundational data-access pipeline for a full-st
 
 ## Features
 
-✅ ASP.NET Core Web API with OpenAPI (Swagger) support in Development
-✅ Entity Framework Core code-first modeling
-✅ SQLite database with migration history
-✅ One-to-many relationships: `PortfolioUser` → `Project` and `PortfolioUser` → `Skill`
-✅ `SeedController` endpoint to populate sample portfolio data
-✅ Blazor WebAssembly client with reusable, parameterized components
-✅ `ProfileCard`, `ProjectList`, and `SkillTags` components rendered on the Home page
+✅ ASP.NET Core Web API with OpenAPI (Swagger) support in Development  
+✅ Entity Framework Core code-first modeling  
+✅ SQLite database with migration history  
+✅ One-to-many relationships: `PortfolioUser` → `Project` and `PortfolioUser` → `Skill`  
+✅ `SeedController` endpoint to populate sample portfolio data  
+✅ Blazor WebAssembly client with reusable, parameterized components  
+✅ `ProfileCard`, `ProjectList`, and `SkillTags` components rendered on the Home page  
 ✅ Clean, well-structured project layout
 
 ## Getting Started
