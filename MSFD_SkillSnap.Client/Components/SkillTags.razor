@@ -1,5 +1,65 @@
+@page "/skills"
+@using MSFD_SkillSnap.Client.Models
+@using MSFD_SkillSnap.Client.Services
+@inject SkillService SkillService
+
 <h3>Skills</h3>
-<div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-    <span style="background:#0078d4; color:white; padding:0.3rem 0.6rem; border-radius:4px;">C#</span>
-    <span style="background:#0078d4; color:white; padding:0.3rem 0.6rem; border-radius:4px;">Blazor</span>
-</div>
+
+@if (skills == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (errorMessage != null)
+{
+    <p role="alert">@errorMessage</p>
+}
+else if (skills.Count == 0)
+{
+    <p>No skills found.</p>
+}
+else
+{
+    <div>
+        @foreach (var skill in skills)
+        {
+            <span style="padding:5px; margin:5px; border:1px solid #ccc; border-radius:5px;">
+                @skill.Name (@skill.Level)
+            </span>
+        }
+    </div>
+}
+
+<button @onclick="AddDummySkill">Add Test Skill</button>
+
+@code {
+    private List<Skill>? skills;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            skills = await SkillService.GetSkillsAsync();
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "The skills API could not be reached.";
+        }
+    }
+
+    private async Task AddDummySkill()
+    {
+        var newSkill = new Skill
+        {
+            Name = "Test Skill",
+            Level = "Beginner",
+            PortfolioUserId = 1
+        };
+
+        var added = await SkillService.AddSkillAsync(newSkill);
+        if (added != null)
+        {
+            skills?.Add(added);
+        }
+    }
+}

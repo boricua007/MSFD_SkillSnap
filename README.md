@@ -15,6 +15,10 @@ The application demonstrates the foundational data-access pipeline for a full-st
 ✅ `SeedController` endpoint to populate sample portfolio data  
 ✅ Blazor WebAssembly client with reusable, parameterized components  
 ✅ `ProfileCard`, `ProjectList`, and `SkillTags` components rendered on the Home page  
+✅ Project and skill services connected to API endpoints  
+✅ Loading, empty, and failed-request states in the data components  
+✅ Swagger UI for testing GET and POST API requests  
+✅ Runtime logs stored in the ignored `Logs/` folder  
 ✅ Clean, well-structured project layout
 
 ## Getting Started
@@ -38,16 +42,16 @@ The application demonstrates the foundational data-access pipeline for a full-st
    dotnet ef database update -p MSFD_SkillSnap.Api -s MSFD_SkillSnap.Api
    ```
 
-4. Run the API
+4. Run the API in one terminal
 
    ```powershell
-   dotnet run --project MSFD_SkillSnap.Api
+   dotnet run --project MSFD_SkillSnap.Api --urls http://localhost:5000
    ```
 
 5. Open Swagger UI while the API is running
 
    ```text
-   http://localhost:5259/swagger
+   http://localhost:5000/swagger
    ```
 
    Swagger UI is only enabled in the Development environment. `Properties/launchSettings.json` sets `ASPNETCORE_ENVIRONMENT=Development` by default.
@@ -56,10 +60,27 @@ The application demonstrates the foundational data-access pipeline for a full-st
 
    - Call `POST /api/seed` to populate a sample `PortfolioUser` with related `Project` and `Skill` records.
 
-7. Run the Blazor client
+7. Run the Blazor client in a second terminal
 
    ```powershell
-   dotnet run --project MSFD_SkillSnap.Client
+   dotnet run --project MSFD_SkillSnap.Client --urls http://localhost:5001
+   ```
+
+8. Open the client
+
+   ```text
+   http://localhost:5001
+   ```
+
+   The client uses `http://localhost:5000/` as its API base address.
+
+   When redirecting output from PowerShell, store runtime logs in `Logs/`:
+
+   ```powershell
+   Logs\api-running.log
+   Logs\api-running-error.log
+   Logs\client-running.log
+   Logs\client-running-error.log
    ```
 
 ## API Endpoints
@@ -72,6 +93,31 @@ The controller uses the route prefix `api/[controller]`.
 | --- | --- | --- |
 | `POST` | `/api/seed` | Seed a sample `PortfolioUser` with related projects and skills if none exist. |
 
+### Projects
+
+| Method | Route | Description |
+| --- | --- | --- |
+| `GET` | `/api/projects` | Return all projects. |
+| `POST` | `/api/projects` | Create a project using `ProjectCreateRequest`. |
+
+Example request body:
+
+```json
+{
+   "title": "My Test Project",
+   "description": "Testing project creation from Swagger",
+   "imageUrl": "https://placehold.co/300x200",
+   "portfolioUserId": 1
+}
+```
+
+### Skills
+
+| Method | Route | Description |
+| --- | --- | --- |
+| `GET` | `/api/skills` | Return all skills. |
+| `POST` | `/api/skills` | Create a skill. |
+
 ## Project Structure
 
 ```
@@ -81,6 +127,7 @@ MSFD_SkillSnap/
 │   ├── Models/
 │   │   ├── PortfolioUser.cs
 │   │   ├── Project.cs
+│   │   ├── ProjectCreateRequest.cs
 │   │   └── Skill.cs
 │   ├── Controllers/
 │   │   └── SeedController.cs
@@ -97,8 +144,12 @@ MSFD_SkillSnap/
 │   ├── Layout/
 │   ├── Pages/
 │   │   └── Home.razor
+│   ├── Services/
+│   │   ├── ProjectService.cs
+│   │   └── SkillService.cs
 │   └── MSFD_SkillSnap.Client.csproj
 │
+├── Logs/                    # Ignored runtime logs
 ├── SubmissionChecklist.txt
 ├── MSFD_SkillSnap.slnx
 └── README.md
@@ -109,8 +160,10 @@ MSFD_SkillSnap/
 1. `Program.cs` registers controllers, OpenAPI services, and `SkillSnapContext` with SQLite.
 2. `PortfolioUser`, `Project`, and `Skill` are defined as related entities; `SkillSnapContext.OnModelCreating` configures the one-to-many relationships (`PortfolioUser.Projects`, `PortfolioUser.Skills`) with cascade delete.
 3. `SeedController` inserts a sample `PortfolioUser` with related projects and skills if none exist yet.
-4. The Blazor client's `Home` page renders `ProfileCard`, `ProjectList`, and `SkillTags` components, with `ProfileCard` accepting `Name`, `Bio`, and `ImageUrl` parameters.
-5. The Development environment enables Swagger UI for exploring the API in a browser.
+4. `ProjectService` and `SkillService` call the API using the registered `HttpClient`.
+5. The Blazor client's `Home` page renders `ProfileCard`, `ProjectList`, and `SkillTags` components, with `ProfileCard` accepting `Name`, `Bio`, and `ImageUrl` parameters.
+6. `ProjectList` and `SkillTags` display loading, empty, and API error states.
+7. The Development environment enables Swagger UI for exploring and testing the API in a browser.
 
 ## Key Concepts Demonstrated
 

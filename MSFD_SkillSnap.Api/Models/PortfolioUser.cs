@@ -11,7 +11,7 @@ namespace MSFD_SkillSnap.Api.Models
 
         public string Name { get; set; }
         public string Bio { get; set; }
-        public string ProfileImageUrl { get; set; }
+        public string ProfileImageUrl { get; set; } = string.Empty;
 
         // Navigation properties
         public List<Project> Projects { get; set; } = new();

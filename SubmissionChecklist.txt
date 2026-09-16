@@ -22,3 +22,37 @@ Submission Checklist (Part 1)
         Program.cs service registrations.
 
     Project saved for continuation in Part 2
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Submission Checklist (Part 2)
+    API controllers for Projects and Skills added ✔️
+        ProjectsController and SkillsController expose GET and POST endpoints.
+
+    CORS configured to allow client communication ✔️
+        The API allows requests from the HTTP and HTTPS Blazor client origins.
+
+    Services in Blazor created and registered ✔️
+        ProjectService and SkillService are registered and call the API endpoints.
+
+    UI components connected to data sources ✔️
+        ProjectList and SkillTags load their data through the registered services.
+
+    Copilot used to generate, test, or refine logic ✔️
+        Copilot was used to add Swagger, API request handling, error states, and
+        project creation request validation.
+
+    Data loaded and displayed in Blazor interface ✔️
+        Projects and skills are loaded from the API and displayed in the client.
+
+    Swagger/OpenAPI configured for API testing ✔️
+        Swagger UI is available at http://localhost:5000/swagger in Development.
+
+    API POST requests tested successfully ✔️
+        Project creation was tested through Swagger using ProjectCreateRequest.
+
+    Failed HTTP calls handled in Blazor ✔️
+        ProjectList and SkillTags display loading, empty, and API error states.
+
+    Runtime logs organized ✔️
+        API and client runtime logs are stored in the ignored Logs/ folder.

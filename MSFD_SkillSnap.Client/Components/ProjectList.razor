@@ -1,5 +1,68 @@
+@page "/projects"
+@using MSFD_SkillSnap.Client.Models
+@using MSFD_SkillSnap.Client.Services
+@inject ProjectService ProjectService
+
 <h3>Projects</h3>
-<ul>
-    <li>Portfolio Site - Blazor + API project</li>
-    <li>Another Dummy Project</li>
-</ul>
+
+@if (projects == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (errorMessage != null)
+{
+    <p role="alert">@errorMessage</p>
+}
+else if (projects.Count == 0)
+{
+    <p>No projects found.</p>
+}
+else
+{
+    <ul>
+        @foreach (var project in projects)
+        {
+            <li>
+                <strong>@project.Title</strong> - @project.Description
+                <br />
+                <img src="@project.ImageUrl" alt="@project.Title" width="200" />
+            </li>
+        }
+    </ul>
+}
+
+<button @onclick="AddDummyProject">Add Test Project</button>
+
+@code {
+    private List<Project>? projects;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            projects = await ProjectService.GetProjectsAsync();
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "The projects API could not be reached.";
+        }
+    }
+
+    private async Task AddDummyProject()
+    {
+        var newProject = new Project
+        {
+            Title = "Test Project",
+            Description = "Added from Blazor form",
+            ImageUrl = "https://placehold.co/200x100",
+            PortfolioUserId = 1
+        };
+
+        var added = await ProjectService.AddProjectAsync(newProject);
+        if (added != null)
+        {
+            projects?.Add(added);
+        }
+    }
+}
