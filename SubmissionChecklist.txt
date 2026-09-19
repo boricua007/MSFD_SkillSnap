@@ -56,3 +56,38 @@ Submission Checklist (Part 2)
 
     Runtime logs organized ✔️
         API and client runtime logs are stored in the ignored Logs/ folder.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Submission Checklist (Authentication)
+    ASP.NET Identity added to the API ✔️
+        IdentityDbContext, UserManager, SignInManager, and Identity services
+        are configured in the API.
+
+    Database updated with Identity schema ✔️
+        The AddIdentity migration was created and applied, including the
+        ASP.NET Identity tables.
+
+    Login and registration API endpoints functional ✔️
+        POST /api/Auth/register and POST /api/Auth/login were tested through
+        Swagger and returned successful responses.
+
+    API routes protected using [Authorize] and roles ✔️
+        Project and skill write routes require authorization, and admin delete
+        routes require the Admin role.
+
+    Blazor login/logout service created ✔️
+        The Blazor client has a Login page and AuthService methods for login
+        and logout using browser local storage.
+
+    Visible logout UI pending
+        AuthService.Logout exists, but a visible logout button still needs to
+        be added to the Blazor navigation or layout.
+
+    Copilot used for guidance and debugging ✔️
+        Copilot was used to configure Identity, JWT authentication, Swagger,
+        database seeding, and related troubleshooting.
+
+    Full authentication flow verified ✔️
+        Registration, login, JWT generation, Swagger authorization, and an
+        authorized project creation request were tested successfully.

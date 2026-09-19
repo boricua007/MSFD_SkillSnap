@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Blazored.LocalStorage;
 using MSFD_SkillSnap.Client;
 using MSFD_SkillSnap.Client.Services;
 
@@ -14,6 +15,8 @@ builder.Services.AddScoped(sp => new HttpClient
 
 builder.Services.AddScoped<ProjectService>();
 builder.Services.AddScoped<SkillService>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddBlazoredLocalStorage();
 
 
 await builder.Build().RunAsync();

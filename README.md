@@ -11,9 +11,12 @@ The application demonstrates the foundational data-access pipeline for a full-st
 ✅ ASP.NET Core Web API with OpenAPI (Swagger) support in Development  
 ✅ Entity Framework Core code-first modeling  
 ✅ SQLite database with migration history  
+✅ ASP.NET Identity with JWT authentication  
 ✅ One-to-many relationships: `PortfolioUser` → `Project` and `PortfolioUser` → `Skill`  
-✅ `SeedController` endpoint to populate sample portfolio data  
+✅ `SeedController` endpoint to populate five rows in each application table  
+✅ Protected API routes using `[Authorize]` and role-based authorization  
 ✅ Blazor WebAssembly client with reusable, parameterized components  
+✅ Blazor login page and local-storage authentication service  
 ✅ `ProfileCard`, `ProjectList`, and `SkillTags` components rendered on the Home page  
 ✅ Project and skill services connected to API endpoints  
 ✅ Loading, empty, and failed-request states in the data components  
@@ -36,7 +39,7 @@ The application demonstrates the foundational data-access pipeline for a full-st
    dotnet tool install --global dotnet-ef
    ```
 
-3. Apply migrations to create the database
+3. Apply migrations to create the database and Identity schema
 
    ```powershell
    dotnet ef database update -p MSFD_SkillSnap.Api -s MSFD_SkillSnap.Api
@@ -58,15 +61,22 @@ The application demonstrates the foundational data-access pipeline for a full-st
 
 6. Seed sample data
 
-   - Call `POST /api/seed` to populate a sample `PortfolioUser` with related `Project` and `Skill` records.
+   - Call `POST /api/seed` to add records until there are five `PortfolioUser`, `Project`, and `Skill` rows. The endpoint is idempotent.
 
-7. Run the Blazor client in a second terminal
+7. Test authentication in Swagger
+
+   - Use `POST /api/auth/register` to create a user.
+   - Use `POST /api/auth/login` to receive a JWT.
+   - Select **Authorize** in Swagger and paste the token without adding `Bearer`; Swagger adds that prefix automatically.
+   - Test protected project and skill routes using the authorized Swagger session.
+
+8. Run the Blazor client in a second terminal
 
    ```powershell
    dotnet run --project MSFD_SkillSnap.Client --urls http://localhost:5001
    ```
 
-8. Open the client
+9. Open the client
 
    ```text
    http://localhost:5001
@@ -91,7 +101,16 @@ The controller uses the route prefix `api/[controller]`.
 
 | Method | Route | Description |
 | --- | --- | --- |
-| `POST` | `/api/seed` | Seed a sample `PortfolioUser` with related projects and skills if none exist. |
+| `POST` | `/api/seed` | Add records until there are five portfolio users, projects, and skills. Safe to call repeatedly. |
+
+### Authentication
+
+| Method | Route | Description |
+| --- | --- | --- |
+| `POST` | `/api/auth/register` | Register an ASP.NET Identity user. |
+| `POST` | `/api/auth/login` | Validate credentials and return a JWT. |
+
+Authentication is configured with JWT bearer tokens. Protected routes return `401 Unauthorized` when no valid token is supplied. Admin-only routes additionally require the `Admin` role.
 
 ### Projects
 
@@ -118,6 +137,8 @@ Example request body:
 | `GET` | `/api/skills` | Return all skills. |
 | `POST` | `/api/skills` | Create a skill. |
 
+Project and skill write operations require a valid bearer token. Use the Swagger **Authorize** button after logging in.
+
 ## Project Structure
 
 ```
@@ -126,14 +147,17 @@ MSFD_SkillSnap/
 ├── MSFD_SkillSnap.Api/
 │   ├── Models/
 │   │   ├── PortfolioUser.cs
+│   │   ├── ApplicationUser.cs
 │   │   ├── Project.cs
 │   │   ├── ProjectCreateRequest.cs
 │   │   └── Skill.cs
 │   ├── Controllers/
+│   │   ├── AuthController.cs
 │   │   └── SeedController.cs
+│   ├── Data/
+│   │   └── SkillSnapContext.cs
 │   ├── Migrations/
 │   ├── Program.cs
-│   ├── SkillSnapContext.cs
 │   └── MSFD_SkillSnap.Api.csproj
 │
 ├── MSFD_SkillSnap.Client/
@@ -143,14 +167,17 @@ MSFD_SkillSnap/
 │   │   └── SkillTags.razor
 │   ├── Layout/
 │   ├── Pages/
-│   │   └── Home.razor
+│   │   ├── Home.razor
+│   │   └── Login.razor
 │   ├── Services/
+│   │   ├── AuthService.cs
 │   │   ├── ProjectService.cs
 │   │   └── SkillService.cs
 │   └── MSFD_SkillSnap.Client.csproj
 │
 ├── Logs/                    # Ignored runtime logs
 ├── SubmissionChecklist.txt
+├── SwaggerWorkflow.txt
 ├── MSFD_SkillSnap.slnx
 └── README.md
 ```
@@ -159,17 +186,23 @@ MSFD_SkillSnap/
 
 1. `Program.cs` registers controllers, OpenAPI services, and `SkillSnapContext` with SQLite.
 2. `PortfolioUser`, `Project`, and `Skill` are defined as related entities; `SkillSnapContext.OnModelCreating` configures the one-to-many relationships (`PortfolioUser.Projects`, `PortfolioUser.Skills`) with cascade delete.
-3. `SeedController` inserts a sample `PortfolioUser` with related projects and skills if none exist yet.
-4. `ProjectService` and `SkillService` call the API using the registered `HttpClient`.
-5. The Blazor client's `Home` page renders `ProfileCard`, `ProjectList`, and `SkillTags` components, with `ProfileCard` accepting `Name`, `Bio`, and `ImageUrl` parameters.
-6. `ProjectList` and `SkillTags` display loading, empty, and API error states.
-7. The Development environment enables Swagger UI for exploring and testing the API in a browser.
+3. `SeedController` adds records until each application table contains five rows.
+4. ASP.NET Identity stores users in the Identity tables created by the `AddIdentity` migration.
+5. `AuthController` registers users and issues JWTs for valid login credentials.
+6. `[Authorize]` and role attributes protect API write and admin operations.
+7. `ProjectService` and `SkillService` call the API using the registered `HttpClient`.
+8. `AuthService` stores the JWT in browser local storage for the Blazor client.
+9. The Blazor client's `Home` page renders `ProfileCard`, `ProjectList`, and `SkillTags` components, with `ProfileCard` accepting `Name`, `Bio`, and `ImageUrl` parameters.
+10. `ProjectList` and `SkillTags` display loading, empty, and API error states.
+11. The Development environment enables Swagger UI for exploring and testing the API in a browser.
 
 ## Key Concepts Demonstrated
 
 - Entity Framework Core code-first development
 - One-to-many entity relationships configured via Fluent API
 - Database migrations (`dotnet ef migrations add`, `dotnet ef database update`)
+- ASP.NET Identity and JWT bearer authentication
+- Swagger-based authentication and protected route testing
 - SQLite as a lightweight relational database
 - Dependency injection and `DbContext` scoping
 - ASP.NET Core minimal hosting model

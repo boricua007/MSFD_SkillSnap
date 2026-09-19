@@ -1,0 +1,51 @@
+SkillSnap Swagger Workflow
+===========================
+
+Start the API in Development mode from the repository root:
+
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+dotnet run --project MSFD_SkillSnap.Api\MSFD_SkillSnap.Api.csproj --no-launch-profile --urls http://localhost:5000
+
+Open Swagger UI:
+
+http://localhost:5000/swagger
+
+Register a user:
+
+1. Expand POST /api/Auth/register.
+2. Select Try it out.
+3. Use a request body such as:
+
+{
+  "email": "testuser@example.com",
+  "password": "Password123!"
+}
+
+4. Select Execute.
+
+Log in and obtain a token:
+
+1. Expand POST /api/Auth/login.
+2. Select Try it out.
+3. Use the same email and password.
+4. Select Execute.
+5. Copy the token from the response.
+
+Authorize Swagger:
+
+1. Select Authorize near the top of the Swagger page.
+2. Enter the token as:
+
+Bearer YOUR_TOKEN_HERE
+
+3. Select Authorize, then Close.
+
+The bearer token is now sent with protected requests. Test the authorized
+project and skill endpoints from Swagger.
+
+Notes:
+
+- Swagger is enabled when ASPNETCORE_ENVIRONMENT is Development.
+- The API uses port 5000 in the command above.
+- Registration and login do not require a bearer token.
+- Stop the API with Ctrl+C when finished.

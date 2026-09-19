@@ -1,0 +1,25 @@
+@page "/login"
+@inject AuthService AuthService
+
+<h3>Login</h3>
+<input @bind="email" placeholder="Email" />
+<input @bind="password" type="password" placeholder="Password" />
+<button @onclick="HandleLogin">Login</button>
+
+@code {
+    private string email;
+    private string password;
+
+    private async Task HandleLogin()
+    {
+        var success = await AuthService.Login(email, password);
+        if (success)
+        {
+            // Redirect or show success
+        }
+        else
+        {
+            // Show error
+        }
+    }
+}
