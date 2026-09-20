@@ -122,3 +122,29 @@ Submission Checklist (Part 4 - Caching and State Management)
     Copilot suggestions used and applied ✔️
         Copilot guidance was used to implement caching, DTO response shaping,
         query optimization, relationship fixes, and runtime verification.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Submission Checklist (Part 5 - Final Integration and Submission)
+    All components of the app are working and connected ✔️
+        The API and Blazor client run together (localhost:5000 and localhost:5158),
+        with the client's ProjectService and SkillService successfully calling the
+        API and rendering data on the Home page.
+
+    CRUD, authentication, and state are verified ✔️
+        Project create/delete, skill create, JWT login/register, role-based
+        authorization, and UserSessionService state were exercised and confirmed
+        through Swagger and the running client.
+
+    Copilot recommendations applied to refine code ✔️
+        Copilot was used to fix the SkillTags "Add Test Skill" silent failure,
+        add cache invalidation on project writes, wire up the logo and profile
+        photo, and resolve a stale Blazor asset-loading issue.
+
+    Application layout and UX reviewed ✔️
+        NavMenu, Home, ProfileCard, ProjectCard, and SkillTags were polished for
+        spacing, responsiveness, and empty/error states.
+
+    Project summary ready for peer review ✔️
+        PeerReviewSubmission.txt documents the project summary, key features,
+        development process and Copilot use, and known issues/future improvements.
