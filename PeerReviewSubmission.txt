@@ -78,3 +78,77 @@ Known Issues or Future Improvements
       default; a future version could let a visitor select or filter by portfolio owner.
     - HTTPS in local development: the API and client currently run over plain HTTP on localhost
       for simplicity; production deployment would need HTTPS and hardened CORS origins.
+
+Full-Stack Design Reflection
+-------------------------------
+
+App Description and Key Features
+    SkillSnap is a full-stack developer portfolio application built with ASP.NET Core Web API,
+    Blazor WebAssembly, Entity Framework Core, and SQLite. It lets a portfolio owner showcase
+    their projects and skills to public visitors, while authenticated users can create new
+    project and skill entries, and admins can moderate content by deleting projects.
+
+    Three key features:
+    1. Portfolio data browsing - a public Home page renders a profile card, a list of featured
+       projects, and tagged skills, all pulled live from the API.
+    2. Role-based content management - authenticated users can add projects/skills, while only
+       Admins can delete projects, enforced through JWT claims and ASP.NET Identity roles.
+    3. Performance-aware data access - the projects endpoint uses in-memory caching and
+       optimized EF Core queries so repeated reads don't hit the database unnecessarily.
+
+Development Challenges and Solutions
+    1. Silent authorization failures in the UI. The "Add Test Skill" button called an
+       [Authorize]-protected endpoint, but the client only handled the success path - a 401 from
+       an unauthenticated request failed silently with no feedback. I traced this to the
+       SkillService/SkillTags component swallowing the null result, then added an explicit error
+       message so the UI surfaces "log in first" instead of doing nothing.
+
+    2. Stale Blazor WebAssembly assets after rebuilds. After updating client code, the browser
+       got stuck loading because it fetched an outdated dotnet.*.js reference from a previous
+       build while an old client process was still serving files. I resolved it by stopping the
+       stale process, forcing a clean rebuild, and restarting the client so the new framework
+       manifest and JS bundle matched.
+
+Business Logic, Data Persistence, and State Management
+    The domain model is layered cleanly: PortfolioUser has one-to-many relationships to Project
+    and Skill, and Project/Skill share a many-to-many relationship through a ProjectSkills join
+    table, all configured via EF Core Fluent API and applied through migrations. Data access
+    flows through the SkillSnapContext DbContext into SQLite, with API controllers projecting
+    entities into flat DTOs (ProjectDto, SkillDto) so navigation properties never leak into
+    responses. On the client, a UserSessionService holds transient state (current user, role,
+    selected project) so components can share context without re-fetching, while
+    ProjectService/SkillService encapsulate all HTTP calls behind a small, testable API.
+
+Security Implementation
+    Authentication uses ASP.NET Identity combined with JWT bearer tokens: users register and log
+    in through dedicated endpoints, receive a signed token containing role claims, and the
+    client persists that token in local storage, reattaching it on startup so sessions survive a
+    page reload. On the API side, write endpoints require a valid token via [Authorize], and
+    destructive actions (project deletion) require the Admin role specifically - validated
+    end-to-end by confirming non-admin delete attempts return 403 Forbidden. CORS is scoped to
+    only the known client origins rather than left open, limiting cross-origin exposure. Swagger
+    UI was used throughout development to exercise the authentication flow directly -
+    registering a user, logging in to obtain a JWT, authorizing the session, and confirming that
+    protected and admin-only routes correctly returned 401/403 without a valid token or role.
+
+Performance Improvements, Caching, and Tradeoffs
+    The GET /api/projects endpoint uses IMemoryCache with a 5-minute sliding and 20-minute
+    absolute expiration, verified by logging: the first request logged a cache miss at ~524ms,
+    and the immediate follow-up logged a cache hit at ~0ms. Because caching can serve stale data
+    after a write, I added explicit cache invalidation whenever a project is created or deleted,
+    trading a small amount of write-side complexity for guaranteed read freshness. Queries also
+    use AsNoTracking() combined with DTO projection to avoid EF Core's change-tracking overhead
+    and prevent full entity graphs from being serialized. The main tradeoff of in-memory caching
+    is that it's per-instance and resets on restart - acceptable for this single-instance
+    scenario, but it wouldn't scale correctly behind multiple API instances without a distributed
+    cache like Redis.
+
+Conclusion
+    Building SkillSnap end-to-end reinforced how the pieces of a full-stack application
+    reinforce each other: a clean domain model makes DTO shaping straightforward, proper
+    authentication makes role-based authorization possible, and caching only becomes safe once
+    invalidation is treated as a first-class concern rather than an afterthought. The most
+    valuable lesson was that a feature isn't truly "done" until its failure paths are handled as
+    deliberately as its success paths - the silent authorization bug in the skill-adding flow is
+    a good example of functionality that appeared complete but wasn't resilient until it
+    surfaced feedback to the user.
