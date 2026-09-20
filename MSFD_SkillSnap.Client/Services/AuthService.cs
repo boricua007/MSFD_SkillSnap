@@ -16,6 +16,15 @@ namespace MSFD_SkillSnap.Client.Services
             _localStorage = localStorage;
         }
 
+        public async Task InitializeAsync()
+        {
+            var token = await _localStorage.GetItemAsStringAsync("authToken");
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                SetBearerToken(token.Trim('"'));
+            }
+        }
+
         public async Task<bool> Login(string email, string password)
         {
             var response = await _http.PostAsJsonAsync("api/auth/login", new { Email = email, Password = password });
@@ -23,8 +32,13 @@ namespace MSFD_SkillSnap.Client.Services
             {
                 var result = await response.Content.ReadFromJsonAsync<JsonElement>();
                 var token = result.GetProperty("token").GetString();
+                if (string.IsNullOrWhiteSpace(token))
+                {
+                    return false;
+                }
+
                 await _localStorage.SetItemAsync("authToken", token);
-                _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                SetBearerToken(token);
                 return true;
             }
             return false;
@@ -40,6 +54,11 @@ namespace MSFD_SkillSnap.Client.Services
         {
             await _localStorage.RemoveItemAsync("authToken");
             _http.DefaultRequestHeaders.Authorization = null;
+        }
+
+        private void SetBearerToken(string token)
+        {
+            _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
     }
 }

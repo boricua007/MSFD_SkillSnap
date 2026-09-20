@@ -14,15 +14,12 @@ namespace MSFD_SkillSnap.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _config;
 
         public AuthController(UserManager<ApplicationUser> userManager,
-                              SignInManager<ApplicationUser> signInManager,
                               IConfiguration config)
         {
             _userManager = userManager;
-            _signInManager = signInManager;
             _config = config;
         }
 
@@ -33,7 +30,10 @@ namespace MSFD_SkillSnap.Api.Controllers
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
+            {
+                await _userManager.AddToRoleAsync(user, "User");
                 return Ok(new { message = "User registered successfully" });
+            }
 
             return BadRequest(result.Errors);
         }
@@ -44,21 +44,26 @@ namespace MSFD_SkillSnap.Api.Controllers
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                var token = GenerateJwtToken(user);
+                var token = await GenerateJwtToken(user);
                 return Ok(new { token });
             }
             return Unauthorized();
         }
 
-        private string GenerateJwtToken(ApplicationUser user)
+        private async Task<string> GenerateJwtToken(ApplicationUser user)
         {
-            var claims = new[]
+            var roles = await _userManager.GetRolesAsync(user);
+            var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-                new Claim(ClaimTypes.NameIdentifier, user.Id)
+                new Claim(JwtRegisteredClaimNames.Sub, user.Email ?? user.UserName ?? user.Id),
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.Email, user.Email ?? string.Empty)
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+
+            var jwtKey = _config["Jwt:Key"] ?? throw new InvalidOperationException("JWT signing key is not configured.");
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(

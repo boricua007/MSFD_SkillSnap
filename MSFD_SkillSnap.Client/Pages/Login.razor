@@ -1,29 +1,74 @@
 @page "/login"
 @inject AuthService AuthService
 @inject UserSessionService SessionService
+@inject NavigationManager NavigationManager
 
 <h3>Login</h3>
-<input @bind="email" placeholder="Email" />
-<input @bind="password" type="password" placeholder="Password" />
 
-<button @onclick="HandleLogin">Login</button>
+<div class="mb-3">
+    <input @bind="email" class="form-control" placeholder="Email" />
+</div>
+<div class="mb-3">
+    <input @bind="password" type="password" class="form-control" placeholder="Password" />
+</div>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(successMessage))
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+<button class="btn btn-primary" @onclick="HandleLogin" disabled="@isSubmitting">
+    @(isSubmitting ? "Logging in..." : "Login")
+</button>
 
 @code {
-    private string email;
-    private string password;
+    private string? email;
+    private string? password;
+    private string? errorMessage;
+    private string? successMessage;
+    private bool isSubmitting;
 
     private async Task HandleLogin()
     {
-        var success = await AuthService.Login(email, password);
-        if (success)
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {
-            // Redirect or show success
-            SessionService.UserId = email;
-            SessionService.Role = "User"; 
+            errorMessage = "Please enter both email and password.";
+            successMessage = null;
+            return;
         }
-        else
+
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
         {
-            // Show error
+            var success = await AuthService.Login(email, password);
+            if (success)
+            {
+                SessionService.UserId = email;
+                SessionService.Role = "User";
+                successMessage = "Login successful. Redirecting...";
+                await Task.Delay(250);
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = "Invalid email or password.";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "Unable to reach the authentication service.";
+        }
+        finally
+        {
+            isSubmitting = false;
         }
     }
 }

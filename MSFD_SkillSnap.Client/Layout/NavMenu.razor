@@ -1,6 +1,11 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">MSFD_SkillSnap.Client</a>
+        <a class="navbar-brand" href="" aria-label="SkillSnap home">
+            <img src="img/skillSnapLogo.png" alt="SkillSnap" />
+        </a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -15,14 +20,19 @@
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+            <NavLink class="nav-link" href="login">
+                <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span> Login
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+            <NavLink class="nav-link" href="register">
+                <span class="bi bi-person-plus" aria-hidden="true"></span> Register
             </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <button class="btn btn-link nav-link text-start" @onclick="HandleLogout">
+                <span class="bi bi-box-arrow-left" aria-hidden="true"></span> Logout
+            </button>
         </div>
     </nav>
 </div>
@@ -35,5 +45,11 @@
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.Logout();
+        NavigationManager.NavigateTo("/login", forceLoad: false);
     }
 }

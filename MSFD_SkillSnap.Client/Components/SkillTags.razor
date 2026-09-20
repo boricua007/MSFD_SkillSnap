@@ -3,37 +3,48 @@
 @using MSFD_SkillSnap.Client.Services
 @inject SkillService SkillService
 
-<h3>Skills</h3>
-
-@if (skills == null)
-{
-    <p><em>Loading...</em></p>
-}
-else if (errorMessage != null)
-{
-    <p role="alert">@errorMessage</p>
-}
-else if (skills.Count == 0)
-{
-    <p>No skills found.</p>
-}
-else
-{
-    <div>
-        @foreach (var skill in skills)
-        {
-            <span style="padding:5px; margin:5px; border:1px solid #ccc; border-radius:5px;">
-                @skill.Name (@skill.Level)
-            </span>
-        }
+<section class="content-section">
+    <div class="section-header">
+        <h3>Core Skills</h3>
     </div>
-}
 
-<button @onclick="AddDummySkill">Add Test Skill</button>
+    @if (skills == null)
+    {
+        <p class="empty-state"><em>Loading skills...</em></p>
+    }
+    else if (errorMessage != null)
+    {
+        <p class="empty-state error-state" role="alert">@errorMessage</p>
+    }
+    else if (skills.Count == 0)
+    {
+        <p class="empty-state">No skills available yet.</p>
+    }
+    else
+    {
+        <div class="skill-list">
+            @foreach (var skill in skills)
+            {
+                <span class="skill-tag">
+                    <strong>@skill.Name</strong>
+                    <small>@skill.Level</small>
+                </span>
+            }
+        </div>
+    }
+
+    <button class="btn btn-secondary mt-3" @onclick="AddDummySkill">Add Test Skill</button>
+
+    @if (addSkillErrorMessage != null)
+    {
+        <p class="empty-state error-state" role="alert">@addSkillErrorMessage</p>
+    }
+</section>
 
 @code {
     private List<Skill>? skills;
     private string? errorMessage;
+    private string? addSkillErrorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -49,6 +60,7 @@ else
 
     private async Task AddDummySkill()
     {
+        addSkillErrorMessage = null;
         var newSkill = new Skill
         {
             Name = "Test Skill",
@@ -59,7 +71,12 @@ else
         var added = await SkillService.AddSkillAsync(newSkill);
         if (added != null)
         {
-            skills?.Add(added);
+            skills ??= new List<Skill>();
+            skills.Add(added);
+        }
+        else
+        {
+            addSkillErrorMessage = "Could not add skill. Log in first (this endpoint requires authorization).";
         }
     }
 }

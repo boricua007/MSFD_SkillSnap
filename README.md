@@ -25,7 +25,11 @@ The application demonstrates the foundational data-access pipeline for a full-st
 ✅ In-memory caching for project queries with expiration policies  
 ✅ Query optimization using `AsNoTracking` and DTO projection  
 ✅ Flat `ProjectDto` and `SkillDto` API response contracts  
+✅ Cache is invalidated automatically on project create/delete  
 ✅ Cache performance logging with hit/miss and request duration output  
+✅ Admin-only project deletion via role-based authorization  
+✅ Startup seeding of `Admin`/`User` roles and a default admin account  
+✅ Client logo and profile photo served from `wwwroot/img`  
 ✅ Runtime logs stored in the ignored `Logs/` folder  
 ✅ Clean, well-structured project layout
 
@@ -78,13 +82,13 @@ The application demonstrates the foundational data-access pipeline for a full-st
 8. Run the Blazor client in a second terminal
 
    ```powershell
-   dotnet run --project MSFD_SkillSnap.Client --urls http://localhost:5001
+   dotnet run --project MSFD_SkillSnap.Client --urls http://localhost:5158
    ```
 
 9. Open the client
 
    ```text
-   http://localhost:5001
+   http://localhost:5158
    ```
 
    The client uses `http://localhost:5000/` as its API base address.
@@ -124,8 +128,9 @@ Authentication is configured with JWT bearer tokens. Protected routes return `40
 
 | Method | Route | Description |
 | --- | --- | --- |
-| `GET` | `/api/projects` | Return all projects. |
-| `POST` | `/api/projects` | Create a project using `ProjectCreateRequest`. |
+| `GET` | `/api/projects` | Return all projects (cached). |
+| `POST` | `/api/projects` | Create a project using `ProjectCreateRequest`. Requires a valid bearer token. |
+| `DELETE` | `/api/projects/{id}` | Delete a project. Requires the `Admin` role. |
 
 Example request body:
 
@@ -145,7 +150,7 @@ Example request body:
 | `GET` | `/api/skills` | Return all skills. |
 | `POST` | `/api/skills` | Create a skill. |
 
-Project and skill write operations require a valid bearer token. Use the Swagger **Authorize** button after logging in.
+Project and skill write operations require a valid bearer token. Use the Swagger **Authorize** button after logging in. In the Blazor client, the "Add Test Skill" button on the Home page will show an inline error if you attempt it while logged out.
 
 ## Testing In-Memory Caching
 
@@ -172,7 +177,9 @@ Request duration: ... ms
 ```
 
 The current cache policy uses a 5-minute sliding expiration and a 20-minute
-absolute expiration. Restarting the API clears the in-memory cache.
+absolute expiration. Restarting the API clears the in-memory cache. The cache
+entry is also removed immediately whenever a project is created or deleted, so
+reads after a write always reflect the latest data.
 
 Verification result: two Swagger requests returned HTTP 200 with identical
 989-byte responses. The first request logged `Cache miss` and took 524 ms; the
@@ -207,20 +214,31 @@ MSFD_SkillSnap/
 ├── MSFD_SkillSnap.Client/
 │   ├── Components/
 │   │   ├── ProfileCard.razor
+│   │   ├── ProjectCard.razor
 │   │   ├── ProjectList.razor
 │   │   └── SkillTags.razor
 │   ├── Layout/
+│   │   ├── MainLayout.razor
+│   │   └── NavMenu.razor
 │   ├── Pages/
 │   │   ├── Home.razor
-│   │   └── Login.razor
+│   │   ├── Login.razor
+│   │   └── Register.razor
 │   ├── Services/
 │   │   ├── AuthService.cs
 │   │   ├── ProjectService.cs
-│   │   └── SkillService.cs
+│   │   ├── SkillService.cs
+│   │   └── UserSessionService.cs
+│   ├── wwwroot/
+│   │   ├── css/app.css
+│   │   └── img/
+│   │       ├── skillSnapLogo.png
+│   │       └── DaisyViruetAllen.png
 │   └── MSFD_SkillSnap.Client.csproj
 │
 ├── Logs/                    # Ignored runtime logs
 ├── SubmissionChecklist.txt
+├── PeerReviewSubmission.txt
 ├── SwaggerWorkflow.txt
 ├── MSFD_SkillSnap.slnx
 └── README.md
@@ -245,6 +263,7 @@ MSFD_SkillSnap/
 13. `UserSessionService` stores the current user, role, and selected project for
    reuse across the Blazor client.
 14. The Development environment enables Swagger UI for exploring and testing the API in a browser.
+15. `NavMenu.razor` renders the SkillSnap logo (`wwwroot/img/skillSnapLogo.png`) as the client's brand, and `ProfileCard` defaults to `wwwroot/img/DaisyViruetAllen.png` for the profile photo.
 
 ## Key Concepts Demonstrated
 

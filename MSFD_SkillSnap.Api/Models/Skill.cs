@@ -10,15 +10,15 @@ namespace MSFD_SkillSnap.Api.Models
         [Key]
         public int Id { get; set; }
 
-        public string Name { get; set; }
-        public string Level { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Level { get; set; } = string.Empty;
 
         // Foreign key to PortfolioUser
         [ForeignKey("PortfolioUser")]
         public int PortfolioUserId { get; set; }
 
         [JsonIgnore]
-        public PortfolioUser PortfolioUser { get; set; }
+        public PortfolioUser? PortfolioUser { get; set; }
 
         [JsonIgnore]
         public List<Project> Projects { get; set; } = new();

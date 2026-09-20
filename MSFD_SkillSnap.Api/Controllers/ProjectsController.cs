@@ -32,7 +32,7 @@ namespace MSFD_SkillSnap.Api.Controllers
             var stopwatch = Stopwatch.StartNew();
 
             // Try to get the projects from the cache first before querying the database
-            if (!_cache.TryGetValue("projects_cache", out List<ProjectDto> projects))
+            if (!_cache.TryGetValue("projects_cache", out List<ProjectDto>? projects) || projects is null)
             {
                 Console.WriteLine("Cache miss");
 
@@ -82,6 +82,7 @@ namespace MSFD_SkillSnap.Api.Controllers
 
             _context.Projects.Add(newProject);
             _context.SaveChanges();
+            _cache.Remove("projects_cache");
             return CreatedAtAction(nameof(GetProjects), new { id = newProject.Id }, newProject);
         }
 
@@ -96,6 +97,7 @@ namespace MSFD_SkillSnap.Api.Controllers
 
             _context.Projects.Remove(project);
             _context.SaveChanges();
+            _cache.Remove("projects_cache");
             return NoContent();
         }
     }

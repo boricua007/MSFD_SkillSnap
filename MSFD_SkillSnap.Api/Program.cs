@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using MSFD_SkillSnap.Api.Data;
@@ -40,7 +39,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowClient", policy =>
     {
-        policy.WithOrigins("http://localhost:5001", "https://localhost:5001") // Blazor Client URLs
+        policy.WithOrigins(
+                "http://localhost:5001",
+                "https://localhost:5001",
+                "http://localhost:5158",
+                "https://localhost:7158")
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
@@ -50,6 +53,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<SkillSnapContext>()
     .AddDefaultTokenProviders();
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -75,6 +80,44 @@ builder.Services.AddAuthentication(options =>
 // Add application services and build the app
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    foreach (var roleName in new[] { "Admin", "User" })
+    {
+        if (!await roleManager.RoleExistsAsync(roleName))
+        {
+            await roleManager.CreateAsync(new IdentityRole(roleName));
+        }
+    }
+
+    var adminEmail = builder.Configuration["AdminUser:Email"] ?? "admin@skillsnap.local";
+    var adminPassword = builder.Configuration["AdminUser:Password"] ?? "Admin123!";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+    if (adminUser == null)
+    {
+        adminUser = new ApplicationUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            EmailConfirmed = true
+        };
+
+        var result = await userManager.CreateAsync(adminUser, adminPassword);
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(adminUser, "Admin");
+        }
+    }
+    else if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+    {
+        await userManager.AddToRoleAsync(adminUser, "Admin");
+    }
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -82,7 +125,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowClient");  // Apply the CORS policy to the app
+app.UseCors("AllowClient");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

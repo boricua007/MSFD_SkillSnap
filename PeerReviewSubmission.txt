@@ -1,0 +1,80 @@
+SkillSnap - Peer Review Submission
+====================================
+
+Project Summary
+----------------
+SkillSnap is a full-stack developer portfolio application built with ASP.NET Core Web API and
+Blazor WebAssembly, backed by Entity Framework Core and SQLite. It models a portfolio owner
+(PortfolioUser) who has many Project entries and many Skill entries, and exposes that data
+through a secured REST API consumed by a Blazor client. The app lets a visitor view a developer's
+profile, featured projects, and core skills, while authenticated users (and admins) can create
+and manage that data.
+
+This is the final capstone project for the Microsoft Full Stack Developer course, part of the
+Full-Stack Certification track.
+
+Key Features
+------------
+
+CRUD
+    GET/POST /api/projects and GET/POST /api/skills for creating and reading portfolio data.
+    DELETE /api/projects/{id} for removing projects (Admin-only).
+    POST /api/seed to populate sample PortfolioUser, Project, and Skill rows (idempotent).
+    Data flows through flat ProjectDto/SkillDto contracts so EF navigation graphs are never
+    exposed directly.
+
+Security
+    ASP.NET Identity with JWT bearer authentication (AuthController: register/login).
+    Role-based authorization: write operations require a valid token; project deletion requires
+    the Admin role.
+    Roles (Admin, User) and a default admin account are seeded automatically at startup.
+    CORS restricts API access to the known Blazor client origins.
+    The Blazor client persists the JWT in local storage (Blazored.LocalStorage) and restores it
+    on app startup.
+
+Caching
+    IMemoryCache caches the GET /api/projects response with a 5-minute sliding / 20-minute
+    absolute expiration.
+    Cache is invalidated on project create/delete so data never goes stale after a write.
+    Query performance is improved with AsNoTracking and DTO projection.
+    Verified via runtime logs: first request logged Cache miss (~524 ms), the repeated request
+    logged Cache hit (~0 ms).
+
+State Management
+    UserSessionService in the Blazor client tracks the current user, role, and selected project
+    across components.
+    ProjectList and SkillTags independently manage loading, empty, and error states for their
+    API calls.
+
+Development Process and Use of Copilot
+---------------------------------------
+The project was built incrementally across five parts: project setup and models, API
+integration, authentication/security, caching and state management, and final integration/
+polish. GitHub Copilot was used throughout to:
+    - Scaffold and refine EF Core models and relationships (one-to-many
+      PortfolioUser -> Project/Skill, many-to-many Project <-> Skill).
+    - Configure ASP.NET Identity, JWT authentication, and Swagger/OpenAPI.
+    - Implement and validate IMemoryCache usage and DTO-based response shaping.
+    - Debug CORS issues, missing JWT role claims, and stale project data after create/delete.
+    - Diagnose and fix a Blazor WebAssembly asset-loading issue after a stale client process
+      locked outdated framework files.
+    - Add and wire up static assets (logo, profile photo) into the Blazor UI.
+    - Polish the client UI (layout, spacing, responsive project/skill cards, empty/error states).
+
+Each change was verified with dotnet build after edits, and runtime behavior (auth flow, cache
+hit/miss, CRUD operations) was verified against the running API using Swagger and PowerShell
+HTTP requests.
+
+Known Issues or Future Improvements
+--------------------------------------
+    - Visible logout UI: AuthService.Logout() exists and is wired to a logout button in the nav
+      menu, but a more prominent, styled sign-out affordance could be added.
+    - Featured Projects data: currently seeded with sample/placeholder project entries; swapping
+      in real project data would require updating the Projects table via the API or
+      SeedController.
+    - No automated tests: the project relies on manual verification (Swagger, PowerShell
+      scripts, browser checks) rather than a unit/integration test suite.
+    - Single portfolio owner in the UI: the client always renders PortfolioUserId = 1's data by
+      default; a future version could let a visitor select or filter by portfolio owner.
+    - HTTPS in local development: the API and client currently run over plain HTTP on localhost
+      for simplicity; production deployment would need HTTPS and hardened CORS origins.

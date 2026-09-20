@@ -1,13 +1,14 @@
 @using MSFD_SkillSnap.Client.Models
 
 <div class="project-card">
-    <h4>@Project.Title</h4>
-    <p>@Project.Description</p>
+    <img src="@(string.IsNullOrWhiteSpace(Project.ImageUrl) ? "https://placehold.co/600x360/1d3557/ffffff?text=Project+Preview" : Project.ImageUrl)"
+         alt="@Project.Title"
+         class="project-image" />
 
-    @if (!string.IsNullOrWhiteSpace(Project.ImageUrl))
-    {
-        <img src="@Project.ImageUrl" alt="@Project.Title" width="200" />
-    }
+    <div class="project-card-body">
+        <h4>@Project.Title</h4>
+        <p>@Project.Description</p>
+    </div>
 </div>
 
 @code {

@@ -16,7 +16,7 @@ namespace MSFD_SkillSnap.Client.Services
         // GET all projects
         public async Task<List<Project>> GetProjectsAsync()
         {
-            return await _http.GetFromJsonAsync<List<Project>>("api/projects");
+            return await _http.GetFromJsonAsync<List<Project>>("api/projects") ?? new List<Project>();
         }
 
         // POST new project with error handling

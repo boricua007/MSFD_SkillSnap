@@ -4,34 +4,38 @@
 @inject ProjectService ProjectService
 @inject UserSessionService SessionService
 
-<h3>Projects</h3>
-
-@if (isLoading)
-{
-    <p><em>Loading...</em></p>
-}
-else if (!string.IsNullOrWhiteSpace(errorMessage))
-{
-    <p role="alert">@errorMessage</p>
-}
-else if (projects.Count == 0)
-{
-    <p>No projects found.</p>
-}
-else
-{
-    <div class="project-grid">
-        @foreach (var project in projects)
-        {
-            <ProjectCard Project="project" />
-        }
+<section class="content-section">
+    <div class="section-header">
+        <h3>Featured Projects</h3>
     </div>
-}
 
-@if (SessionService.CurrentProject != null)
-{
-    <p>Currently editing: @SessionService.CurrentProject.Title</p>
-}
+    @if (isLoading)
+    {
+        <p class="empty-state"><em>Loading projects...</em></p>
+    }
+    else if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <p class="empty-state error-state" role="alert">@errorMessage</p>
+    }
+    else if (projects.Count == 0)
+    {
+        <p class="empty-state">No projects found yet. Add one to get started.</p>
+    }
+    else
+    {
+        <div class="project-grid">
+            @foreach (var project in projects)
+            {
+                <ProjectCard Project="project" />
+            }
+        </div>
+    }
+
+    @if (SessionService.CurrentProject != null)
+    {
+        <p class="selected-project">Currently editing: @SessionService.CurrentProject.Title</p>
+    }
+</section>
 
 @code {
     private List<Project> projects = new();

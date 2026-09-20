@@ -14,13 +14,15 @@ namespace MSFD_SkillSnap.Client.Services
 
         public async Task<List<Skill>> GetSkillsAsync()
         {
-            return await _http.GetFromJsonAsync<List<Skill>>("api/skills");
+            return await _http.GetFromJsonAsync<List<Skill>>("api/skills") ?? new List<Skill>();
         }
 
-        public async Task<Skill> AddSkillAsync(Skill newSkill)
+        public async Task<Skill?> AddSkillAsync(Skill newSkill)
         {
             var response = await _http.PostAsJsonAsync("api/skills", newSkill);
-            return await response.Content.ReadFromJsonAsync<Skill>();
+            return response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<Skill>()
+                : null;
         }
     }
 }

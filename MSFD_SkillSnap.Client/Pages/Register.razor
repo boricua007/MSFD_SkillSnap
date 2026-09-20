@@ -1,25 +1,71 @@
 @page "/register"
 @inject MSFD_SkillSnap.Client.Services.AuthService AuthService
+@inject NavigationManager NavigationManager
 
 <h3>Register</h3>
-<input @bind="email" placeholder="Email" />
-<input @bind="password" type="password" placeholder="Password" />
-<button @onclick="HandleRegister">Register</button>
+
+<div class="mb-3">
+    <input @bind="email" class="form-control" placeholder="Email" />
+</div>
+<div class="mb-3">
+    <input @bind="password" type="password" class="form-control" placeholder="Password" />
+</div>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(successMessage))
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+<button class="btn btn-primary" @onclick="HandleRegister" disabled="@isSubmitting">
+    @(isSubmitting ? "Registering..." : "Register")
+</button>
 
 @code {
-    private string email;
-    private string password;
+    private string? email;
+    private string? password;
+    private string? errorMessage;
+    private string? successMessage;
+    private bool isSubmitting;
 
     private async Task HandleRegister()
     {
-        var success = await AuthService.Register(email, password);
-        if (success)
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {
-            // Redirect to login or show success
+            errorMessage = "Please enter an email and password.";
+            successMessage = null;
+            return;
         }
-        else
+
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
         {
-            // Show error
+            var success = await AuthService.Register(email, password);
+            if (success)
+            {
+                successMessage = "Registration successful. Redirecting to login...";
+                await Task.Delay(250);
+                NavigationManager.NavigateTo("/login");
+            }
+            else
+            {
+                errorMessage = "Registration failed. Please try again.";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "Unable to reach the authentication service.";
+        }
+        finally
+        {
+            isSubmitting = false;
         }
     }
 }
