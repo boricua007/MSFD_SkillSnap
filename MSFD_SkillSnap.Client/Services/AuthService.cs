@@ -30,6 +30,12 @@ namespace MSFD_SkillSnap.Client.Services
             return false;
         }
 
+        public async Task<bool> Register(string email, string password)
+        {
+            var response = await _http.PostAsJsonAsync("api/auth/register", new { Email = email, Password = password });
+            return response.IsSuccessStatusCode;
+        }
+
         public async Task Logout()
         {
             await _localStorage.RemoveItemAsync("authToken");

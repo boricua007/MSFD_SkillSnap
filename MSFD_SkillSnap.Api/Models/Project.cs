@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace MSFD_SkillSnap.Api.Models
 {
@@ -14,6 +16,10 @@ namespace MSFD_SkillSnap.Api.Models
 
         [ForeignKey("PortfolioUser")]
         public int PortfolioUserId { get; set; }
+
+        [JsonIgnore]
         public PortfolioUser PortfolioUser { get; set; }
+
+        public List<Skill> Skills { get; set; } = new();
     }
 }

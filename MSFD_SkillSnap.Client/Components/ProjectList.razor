@@ -2,14 +2,15 @@
 @using MSFD_SkillSnap.Client.Models
 @using MSFD_SkillSnap.Client.Services
 @inject ProjectService ProjectService
+@inject UserSessionService SessionService
 
 <h3>Projects</h3>
 
-@if (projects == null)
+@if (isLoading)
 {
     <p><em>Loading...</em></p>
 }
-else if (errorMessage != null)
+else if (!string.IsNullOrWhiteSpace(errorMessage))
 {
     <p role="alert">@errorMessage</p>
 }
@@ -19,50 +20,44 @@ else if (projects.Count == 0)
 }
 else
 {
-    <ul>
+    <div class="project-grid">
         @foreach (var project in projects)
         {
-            <li>
-                <strong>@project.Title</strong> - @project.Description
-                <br />
-                <img src="@project.ImageUrl" alt="@project.Title" width="200" />
-            </li>
+            <ProjectCard Project="project" />
         }
-    </ul>
+    </div>
 }
 
-<button @onclick="AddDummyProject">Add Test Project</button>
+@if (SessionService.CurrentProject != null)
+{
+    <p>Currently editing: @SessionService.CurrentProject.Title</p>
+}
 
 @code {
-    private List<Project>? projects;
+    private List<Project> projects = new();
+    private bool isLoading;
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadProjectsAsync();
+    }
+
+    private async Task LoadProjectsAsync()
+    {
         try
         {
+            isLoading = true;
+            errorMessage = null;
             projects = await ProjectService.GetProjectsAsync();
         }
         catch (HttpRequestException)
         {
             errorMessage = "The projects API could not be reached.";
         }
-    }
-
-    private async Task AddDummyProject()
-    {
-        var newProject = new Project
+        finally
         {
-            Title = "Test Project",
-            Description = "Added from Blazor form",
-            ImageUrl = "https://placehold.co/200x100",
-            PortfolioUserId = 1
-        };
-
-        var added = await ProjectService.AddProjectAsync(newProject);
-        if (added != null)
-        {
-            projects?.Add(added);
+            isLoading = false;
         }
     }
 }

@@ -4,7 +4,7 @@
 
 SkillSnap is a developer portfolio application built with ASP.NET Core Web API and Blazor WebAssembly, backed by Entity Framework Core and SQLite. It models a portfolio owner (`PortfolioUser`) who has many `Project` entries and many `Skill` entries, and exposes that data through a REST API consumed by a Blazor client.
 
-The application demonstrates the foundational data-access pipeline for a full-stack app: defining domain models, configuring a `DbContext` with one-to-many relationships, generating EF Core migrations, seeding sample data through an API endpoint, and rendering that data through Blazor components.
+The application demonstrates the foundational data-access pipeline for a full-stack app: defining domain models, configuring a `DbContext` with one-to-many and many-to-many relationships, generating EF Core migrations, seeding sample data through an API endpoint, and rendering that data through Blazor components.
 
 ## Features
 
@@ -13,6 +13,7 @@ The application demonstrates the foundational data-access pipeline for a full-st
 ✅ SQLite database with migration history  
 ✅ ASP.NET Identity with JWT authentication  
 ✅ One-to-many relationships: `PortfolioUser` → `Project` and `PortfolioUser` → `Skill`  
+✅ Many-to-many relationship: `Project` ↔ `Skill` through the `ProjectSkills` join table  
 ✅ `SeedController` endpoint to populate five rows in each application table  
 ✅ Protected API routes using `[Authorize]` and role-based authorization  
 ✅ Blazor WebAssembly client with reusable, parameterized components  
@@ -21,6 +22,10 @@ The application demonstrates the foundational data-access pipeline for a full-st
 ✅ Project and skill services connected to API endpoints  
 ✅ Loading, empty, and failed-request states in the data components  
 ✅ Swagger UI for testing GET and POST API requests  
+✅ In-memory caching for project queries with expiration policies  
+✅ Query optimization using `AsNoTracking` and DTO projection  
+✅ Flat `ProjectDto` and `SkillDto` API response contracts  
+✅ Cache performance logging with hit/miss and request duration output  
 ✅ Runtime logs stored in the ignored `Logs/` folder  
 ✅ Clean, well-structured project layout
 
@@ -84,6 +89,9 @@ The application demonstrates the foundational data-access pipeline for a full-st
 
    The client uses `http://localhost:5000/` as its API base address.
 
+   If the API is running on a different port, update the `HttpClient` base
+   address in `MSFD_SkillSnap.Client/Program.cs` to match it.
+
    When redirecting output from PowerShell, store runtime logs in `Logs/`:
 
    ```powershell
@@ -139,6 +147,37 @@ Example request body:
 
 Project and skill write operations require a valid bearer token. Use the Swagger **Authorize** button after logging in.
 
+## Testing In-Memory Caching
+
+The `GET /api/projects` endpoint checks the in-memory cache before querying the
+database. The first request after application startup normally produces a cache
+miss and loads the projects from SQLite. Later requests use the cached DTO list
+until the entry expires.
+
+To run the API on a dedicated test port and enable Swagger, use:
+
+```powershell
+$env:ASPNETCORE_ENVIRONMENT = 'Development'
+dotnet run --project MSFD_SkillSnap.Api --no-launch-profile --urls http://localhost:5001
+```
+
+Open `http://localhost:5001/swagger`, expand `GET /api/projects`, select
+**Try it out**, and execute the request twice. The API terminal should show:
+
+```text
+Cache miss
+Request duration: ... ms
+Cache hit
+Request duration: ... ms
+```
+
+The current cache policy uses a 5-minute sliding expiration and a 20-minute
+absolute expiration. Restarting the API clears the in-memory cache.
+
+Verification result: two Swagger requests returned HTTP 200 with identical
+989-byte responses. The first request logged `Cache miss` and took 524 ms; the
+second logged `Cache hit` and took 0 ms.
+
 ## Project Structure
 
 ```
@@ -151,9 +190,14 @@ MSFD_SkillSnap/
 │   │   ├── Project.cs
 │   │   ├── ProjectCreateRequest.cs
 │   │   └── Skill.cs
+│   ├── DTOs/
+│   │   ├── ProjectDto.cs
+│   │   └── SkillDto.cs
 │   ├── Controllers/
 │   │   ├── AuthController.cs
-│   │   └── SeedController.cs
+│   │   ├── ProjectsController.cs
+│   │   ├── SeedController.cs
+│   │   └── SkillsController.cs
 │   ├── Data/
 │   │   └── SkillSnapContext.cs
 │   ├── Migrations/
@@ -185,7 +229,7 @@ MSFD_SkillSnap/
 ## How It Works
 
 1. `Program.cs` registers controllers, OpenAPI services, and `SkillSnapContext` with SQLite.
-2. `PortfolioUser`, `Project`, and `Skill` are defined as related entities; `SkillSnapContext.OnModelCreating` configures the one-to-many relationships (`PortfolioUser.Projects`, `PortfolioUser.Skills`) with cascade delete.
+2. `PortfolioUser`, `Project`, and `Skill` are defined as related entities; `SkillSnapContext.OnModelCreating` configures the one-to-many relationships (`PortfolioUser.Projects`, `PortfolioUser.Skills`) with cascade delete and the many-to-many `ProjectSkills` join table.
 3. `SeedController` adds records until each application table contains five rows.
 4. ASP.NET Identity stores users in the Identity tables created by the `AddIdentity` migration.
 5. `AuthController` registers users and issues JWTs for valid login credentials.
@@ -194,19 +238,27 @@ MSFD_SkillSnap/
 8. `AuthService` stores the JWT in browser local storage for the Blazor client.
 9. The Blazor client's `Home` page renders `ProfileCard`, `ProjectList`, and `SkillTags` components, with `ProfileCard` accepting `Name`, `Bio`, and `ImageUrl` parameters.
 10. `ProjectList` and `SkillTags` display loading, empty, and API error states.
-11. The Development environment enables Swagger UI for exploring and testing the API in a browser.
+11. `ProjectsController` uses `AsNoTracking`, projects entities into `ProjectDto`,
+   and caches the result with `IMemoryCache`.
+12. `SkillsController` maps `Skill` entities to and from `SkillDto` so navigation
+   properties are not exposed in API responses.
+13. `UserSessionService` stores the current user, role, and selected project for
+   reuse across the Blazor client.
+14. The Development environment enables Swagger UI for exploring and testing the API in a browser.
 
 ## Key Concepts Demonstrated
 
 - Entity Framework Core code-first development
-- One-to-many entity relationships configured via Fluent API
+- One-to-many and many-to-many entity relationships configured via Fluent API
 - Database migrations (`dotnet ef migrations add`, `dotnet ef database update`)
+- SQLite as a lightweight relational database
 - ASP.NET Identity and JWT bearer authentication
 - Swagger-based authentication and protected route testing
-- SQLite as a lightweight relational database
+- Swagger/OpenAPI endpoint documentation
 - Dependency injection and `DbContext` scoping
 - ASP.NET Core minimal hosting model
-- Swagger/OpenAPI endpoint documentation
+- In-memory caching and cache performance measurement
+- DTO-based API response shaping
 - Blazor WebAssembly component composition and parameters
 
 ## About

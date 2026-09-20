@@ -1,9 +1,11 @@
 @page "/login"
 @inject AuthService AuthService
+@inject UserSessionService SessionService
 
 <h3>Login</h3>
 <input @bind="email" placeholder="Email" />
 <input @bind="password" type="password" placeholder="Password" />
+
 <button @onclick="HandleLogin">Login</button>
 
 @code {
@@ -16,6 +18,8 @@
         if (success)
         {
             // Redirect or show success
+            SessionService.UserId = email;
+            SessionService.Role = "User"; 
         }
         else
         {

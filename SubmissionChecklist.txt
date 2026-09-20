@@ -1,4 +1,4 @@
-Submission Checklist (Part 1)
+Submission Checklist (Part 1 - Project Setup)
     Solution with API and Client projects added ✔️
         MSFD_SkillSnap.Api and MSFD_SkillSnap.Client projects created and
         added to MSFD_SkillSnap.slnx.
@@ -25,7 +25,7 @@ Submission Checklist (Part 1)
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-Submission Checklist (Part 2)
+Submission Checklist (Part 2 - API Integration)
     API controllers for Projects and Skills added ✔️
         ProjectsController and SkillsController expose GET and POST endpoints.
 
@@ -46,7 +46,8 @@ Submission Checklist (Part 2)
         Projects and skills are loaded from the API and displayed in the client.
 
     Swagger/OpenAPI configured for API testing ✔️
-        Swagger UI is available at http://localhost:5000/swagger in Development.
+        Swagger UI is available at http://localhost:5001/swagger in Development
+        when the API is started on port 5001.
 
     API POST requests tested successfully ✔️
         Project creation was tested through Swagger using ProjectCreateRequest.
@@ -59,7 +60,7 @@ Submission Checklist (Part 2)
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-Submission Checklist (Authentication)
+Submission Checklist (Part 3 - Securing the Application [Authentication])
     ASP.NET Identity added to the API ✔️
         IdentityDbContext, UserManager, SignInManager, and Identity services
         are configured in the API.
@@ -91,3 +92,33 @@ Submission Checklist (Authentication)
     Full authentication flow verified ✔️
         Registration, login, JWT generation, Swagger authorization, and an
         authorized project creation request were tested successfully.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Submission Checklist (Part 4 - Caching and State Management)
+    In-memory caching implemented in the API ✔️
+        IMemoryCache is registered in Program.cs and project results are cached
+        using a sliding expiration of 5 minutes and an absolute expiration of
+        20 minutes.
+
+    Query performance improvements applied ✔️
+        The projects query uses AsNoTracking and projects directly into a flat
+        ProjectDto response, avoiding unnecessary entity tracking and navigation
+        graph serialization.
+
+    Skill DTO added for consistent API contracts ✔️
+        SkillDto is stored in the API DTOs folder, and SkillsController maps
+        between the DTO and the EF Skill entity for GET and POST requests.
+
+    Blazor state management enabled ✔️
+        UserSessionService stores the current user, role, and selected project
+        for reuse across the Blazor client.
+
+    Performance verified through Swagger and runtime logging ✔️
+        GET /api/projects was executed twice through Swagger. The first request
+        logged Cache miss and took 524 ms; the second logged Cache hit and took
+        0 ms. Both requests returned HTTP 200 successfully.
+
+    Copilot suggestions used and applied ✔️
+        Copilot guidance was used to implement caching, DTO response shaping,
+        query optimization, relationship fixes, and runtime verification.

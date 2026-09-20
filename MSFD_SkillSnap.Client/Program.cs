@@ -16,6 +16,8 @@ builder.Services.AddScoped(sp => new HttpClient
 builder.Services.AddScoped<ProjectService>();
 builder.Services.AddScoped<SkillService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<UserSessionService>();
+
 builder.Services.AddBlazoredLocalStorage();
 
 

@@ -1,7 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using MSFD_SkillSnap.Api.Data;
+using MSFD_SkillSnap.Api.DTOs;
 using MSFD_SkillSnap.Api.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Caching.Memory;
+using MSFD_SkillSnap.Api.Controllers;
+using System.Diagnostics;
 
 namespace MSFD_SkillSnap.Api.Controllers
 {
@@ -10,18 +15,52 @@ namespace MSFD_SkillSnap.Api.Controllers
     public class ProjectsController : ControllerBase
     {
         private readonly SkillSnapContext _context;
+        private readonly IMemoryCache _cache;
 
-        public ProjectsController(SkillSnapContext context)
+        public ProjectsController(SkillSnapContext context, IMemoryCache cache)
         {
             _context = context;
+            _cache = cache;
         }
 
 
         // GET: api/projects
         [HttpGet]
-        public IActionResult GetProjects()
+        public async Task<IActionResult> GetProjects()
         {
-            var projects = _context.Projects.ToList();
+            // Caching: Measure the time taken to retrieve projects, either from cache or database
+            var stopwatch = Stopwatch.StartNew();
+
+            // Try to get the projects from the cache first before querying the database
+            if (!_cache.TryGetValue("projects_cache", out List<ProjectDto> projects))
+            {
+                Console.WriteLine("Cache miss");
+
+                projects = await _context.Projects.AsNoTracking()
+                    .Select(p => new ProjectDto
+                    {
+                        Id = p.Id,
+                        Title = p.Title,
+                        Description = p.Description,
+                        ImageUrl = p.ImageUrl,
+                        PortfolioUserId = p.PortfolioUserId
+                    })
+                    .ToListAsync();
+
+                var cacheOptions = new MemoryCacheEntryOptions()
+                    .SetSlidingExpiration(TimeSpan.FromMinutes(5))
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(20));
+
+                _cache.Set("projects_cache", projects, cacheOptions);
+            }
+            else
+            {
+                Console.WriteLine("Cache hit");
+            }
+
+            stopwatch.Stop();
+            Console.WriteLine($"Request duration: {stopwatch.ElapsedMilliseconds} ms");
+
             return Ok(projects);
         }
 

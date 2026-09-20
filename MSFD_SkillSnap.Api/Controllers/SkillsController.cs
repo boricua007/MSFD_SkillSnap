@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MSFD_SkillSnap.Api.Data;
+using MSFD_SkillSnap.Api.DTOs;
 using MSFD_SkillSnap.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 namespace MSFD_SkillSnap.Api.Controllers
@@ -19,18 +20,43 @@ namespace MSFD_SkillSnap.Api.Controllers
         [HttpGet]
         public IActionResult GetSkills()
         {
-            var skills = _context.Skills.ToList();
+            var skills = _context.Skills
+                .Select(skill => new SkillDto
+                {
+                    Id = skill.Id,
+                    Name = skill.Name,
+                    Level = skill.Level,
+                    PortfolioUserId = skill.PortfolioUserId
+                })
+                .ToList();
+
             return Ok(skills);
         }
 
         // POST: api/skills
         [Authorize]
         [HttpPost]
-        public IActionResult AddSkill(Skill newSkill)
+        public IActionResult AddSkill(SkillDto newSkill)
         {
-            _context.Skills.Add(newSkill);
+            var skill = new Skill
+            {
+                Name = newSkill.Name,
+                Level = newSkill.Level,
+                PortfolioUserId = newSkill.PortfolioUserId
+            };
+
+            _context.Skills.Add(skill);
             _context.SaveChanges();
-            return CreatedAtAction(nameof(GetSkills), new { id = newSkill.Id }, newSkill);
+
+            var response = new SkillDto
+            {
+                Id = skill.Id,
+                Name = skill.Name,
+                Level = skill.Level,
+                PortfolioUserId = skill.PortfolioUserId
+            };
+
+            return CreatedAtAction(nameof(GetSkills), new { id = skill.Id }, response);
         }
 
         // DELETE: api/skills/{id}

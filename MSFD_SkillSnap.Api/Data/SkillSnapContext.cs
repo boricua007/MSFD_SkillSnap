@@ -29,5 +29,11 @@ public class SkillSnapContext : IdentityDbContext<ApplicationUser>
             .WithOne(s => s.PortfolioUser)
             .HasForeignKey(s => s.PortfolioUserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Projects can have many Skills and Skills can belong to many Projects
+        modelBuilder.Entity<Project>()
+            .HasMany(p => p.Skills)
+            .WithMany(s => s.Projects)
+            .UsingEntity(j => j.ToTable("ProjectSkills"));
     }
 }

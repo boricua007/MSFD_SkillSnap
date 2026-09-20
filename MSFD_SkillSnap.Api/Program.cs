@@ -14,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddMemoryCache();
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -35,7 +36,6 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddDbContext<SkillSnapContext>(options =>
     options.UseSqlite("Data Source=skillsnap.db"));
 
-// Enable CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowClient", policy =>
