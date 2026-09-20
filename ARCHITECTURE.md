@@ -57,6 +57,11 @@ flowchart LR
     classDef tool fill:#f3edff,stroke:#7755b5,stroke-width:2px,color:#30204d;
     classDef actor fill:#ffffff,stroke:#555555,stroke-width:2px,color:#222222;
 
+    style Client fill:#dbeafe,stroke:#2563eb,stroke-width:3px,color:#0f172a;
+    style API fill:#dcfce7,stroke:#16a34a,stroke-width:3px,color:#14532d;
+    style Data fill:#fef3c7,stroke:#d97706,stroke-width:3px,color:#451a03;
+    style Tooling fill:#f3e8ff,stroke:#9333ea,stroke-width:3px,color:#3b0764;
+
     class UI,ClientServices,Session client;
     class Routes,DTOs,Cache,Auth api;
     class EF,SQLite,JoinTable data;
